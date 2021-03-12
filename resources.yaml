@@ -1,0 +1,26 @@
+---
+# The latest image we want deployed. If images are running that have an
+# appropriate prefix but are not running this image, they will be removed.
+image: vggp-v40-j214-495f8c33c4b0-master
+image_id: d92781a6-bbb5-4238-8fd7-c38d2cc8b68f
+
+network: private_net
+network_id: d92781a6-bbb5-4238-8fd7-c38d2cc8b68f
+image_replace: false
+
+secgroups:
+ - condor-cluster-egress-public
+ - condor-cluster-ingress-private
+
+graceful: false
+sshkey: condor-cluster-cloud_key
+
+# The public key(s) we will accept when SSHing to a machine.
+pubkeys:
+    - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDrm8mxOuqwP5XTHf685V9rqRXXg41F4isJvRr4h3MPDs8PgqZBzzjxEFyGpJ/Rgg4ACesGBZy+CbVVGtOveltKvgkpzyHIrh+vMay9z82eK2LMZEfmEPgw1BHdRifPZ1Qb7Zmj1nRk1EMWoNvbBxEc3/MSorWb+2SVMs+42EZ7QxavBmsU7zNU0Nd0e1xiqJ00VDWMnXullp/ieR9M4/XsSlS3oqxsxkAbY3eQYVMsnh64oiRw3lpYBkPyNtC/VSL5Cqig3CMaiK9AW8FjP1GwwqoMjL0H0Mkr0fY8eSSQ9Tcy5AqyaiPn7tmG0fSeNOFwxGkTzrujqlCiOkRSM1Yj marco@MacBook-Pro-di-Marco.local"
+
+deployment:
+    worker-medium:
+        count: 1 #40
+        flavor: medium
+        group: compute
