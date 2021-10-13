@@ -24,3 +24,7 @@ deployment:
         count: 2 #40
         flavor: medium
         group: compute
+    worker-test:
+        count: 1 #40
+        flavor: medium
+        group: compute
