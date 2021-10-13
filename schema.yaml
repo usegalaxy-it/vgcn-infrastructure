@@ -1,0 +1,93 @@
+---
+type: map
+mapping:
+    "image":
+        type: str
+        required: true
+    "image_id":
+      type: str
+      required: true
+    "image_replace":
+        type: bool
+        required: true
+    "network":
+        type: str
+        required: true
+    "network_id":
+        type: str
+        required: true
+    "secgroups":
+        type: seq
+        required: true
+        sequence:
+          - type: str
+    "graceful":
+        type: bool
+        required: true
+    "sshkey":
+        type: str
+        required: true
+    "pubkeys":
+        type: seq
+        sequence:
+          - type: str
+    "deployment":
+        type: map
+        mapping:
+            "=":
+                type: map
+                mapping:
+                    "count":
+                        type: int
+                        required: true
+                        range:
+                          min: 0
+                    "flavor":
+                        type: str
+                        required: true
+                        enum:
+                          - xlarge
+                          - xxlarge
+                          - tiny
+                          - small
+                          - medium
+                          - large
+                   "start":
+                        type: date
+                        format: "%Y-%m-%d"
+                    "end":
+                        type: date
+                        format: "%Y-%m-%d"
+                    "group":
+                        type: str
+                    "volume":
+                        type: map
+                        'mapping':
+                            "size":
+                                type: int
+                                range:
+                                  min: 12
+                            "type":
+                                type: str
+                                enum:
+                                  - default
+                                  - netapp
+                            "boot":
+                                type: bool
+                    "cgroups":
+                        type: map
+                        'mapping':
+                            "mem_limit_policy":
+                                type: str
+                                enum:
+                                  - soft
+                                  - hard
+                            "mem_reserved_size":
+                                type: int
+                                required: true
+                                range:
+                                    min: 1024
+                    "docker_ready":
+                        type: bool
+                    "gpu_ready":
+                        type: bool
