@@ -52,7 +52,7 @@ mapping:
                           - small
                           - medium
                           - large
-                   "start":
+                    "start":
                         type: date
                         format: "%Y-%m-%d"
                     "end":
