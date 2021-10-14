@@ -17,11 +17,11 @@ sshkey: condor-cluster-cloud_keycopy
 
 # The public key(s) we will accept when SSHing to a machine.
 pubkeys:
-    - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDKEno3f5hZGYYoLjXNwOBPGwVioKJYvFa/f4/U2pnFSBe3+thxPjSsyfQAvBw8KuJkiPRwLfggTu3CG02gUV9VWBWUUHPh7i+PNf7CgLrQvnDcah88Uikk3LW6OujD9yuAR+CQ1mleZxSfjc+Ne/+nFHAjT/8Ir9p3S5wcilkVTy5L5Wozi7iL9UdGvICiAnXTq5jcc84Ki1CPxw4MnAMPv62AluKek9yHW6CDHL4jK4Bgqh+u+0n9WH0ot47QCEI/4//9j6ThyN6v/oDJOMOCpCLmmJ50WFVO5lzd95DIwZsVhAKAJi7ClLDf2jTLRBmciRO3GOmA9F7ZUzXv47DgC2I9cVRzD3d65wHWqU9f8Do/8nBycGvuYbXmXor0iuldcS3HZPhlwBiMCSicsqUV4RgV05TAjeV2b2er/E86vpk57MjjpQItCAz9ssR7jjOj4w5zXGV3jQRq1c0yB0lRnvY2zScfD5zDMAn0o2hl7uMiuei6jKPQTtT629UqQ80= pitta@pitta-Inspiron-5567"
+    - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDH1TyGvTGFzEBK2lSrcCvKVTQiA7jLQJYIPlsWZcyQzfgDhcJEBt93wJpj9cn8rnJHFFwnoRWfMSZqUn0VD+tByIWdi32fgjD/+6zUbyZojFAiiIQN80/8toktw7duynpDJPNgRt6a7PnsFX24s1jhkN8WZShRf6SpubRAUyxgj6Zuz7KQtieY2x2YRdAAXsKpnOGbMi2mE5G+PLVx/t3FzcHheDqNPz6R5j0Ikq/uiobd+E1hwCCW+P8+qa+OPnrhvuNf24mOApwGvEkKDELHJotTLAdCmfbhpuBqTx3BICPikdzOwpJ4tCierU+SxD1wy7ffCEonrEwNN7gBiT9d"
 
 deployment:
     worker-medium:
-        count: 0 #40
+        count: 2 #40
         flavor: medium
         group: compute
     worker-test:
