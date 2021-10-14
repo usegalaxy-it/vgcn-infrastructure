@@ -21,7 +21,7 @@ pubkeys:
 
 deployment:
     worker-medium:
-        count: 2 #40
+        count: 0 #40
         flavor: medium
         group: compute
     worker-test:
