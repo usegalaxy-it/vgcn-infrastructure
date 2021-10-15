@@ -1,4 +1,5 @@
 # VGCN Infrastructure Management
+[![Build Status](http://90.147.75.124:4000/jenkins/job/vgcn-pipeline-test/badge/icon)](http://90.147.75.124:4000/jenkins/job/vgcn-pipeline-test/)
 
 This repository allows for definition and management of VGNC resources in the
 bwCloud for usegalaxy.eu
