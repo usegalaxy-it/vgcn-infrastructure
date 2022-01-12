@@ -21,10 +21,10 @@ pubkeys:
 
 deployment:
     worker-medium:
-        count: 0 
+        count: 1
         flavor: medium
         group: compute
     worker-test:
-        count: 2 #40
+        count: 1 #40
         flavor: large
         group: compute
