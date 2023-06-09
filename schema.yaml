@@ -64,6 +64,11 @@ mapping:
                           - small
                           - medium
                           - large
+                          # Cineca
+                          - fl.ada.xs
+                          - fl.ada.s
+                          - fl.ada.m
+                          - fl.ada.l 
                     "start":
                         type: date
                         format: "%Y-%m-%d"
