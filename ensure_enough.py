@@ -42,6 +42,8 @@ class StateManagement:
             self.user_data = handle.read()
 
         self.current_image_name = self.config['image']
+        self.current_image_gpu_name = self.config['image_gpu']
+        self.current_image_secure_name = self.config['image_secure']
         self.vgcn_pubkeys = self.config['pubkeys']
         self.today = datetime.date.today()
 
@@ -186,8 +188,19 @@ class StateManagement:
 
         return custom_userdata
 
+    def _select_image(self, gpu_ready=False, secure_ready=False):
+
+        if gpu_ready:
+            current_image_name = self.current_image_gpu_name
+        elif secure_ready:
+            current_image_name = self.current_image_secure_name
+        else:
+            current_image_name = self.current_image_name
+
+        return current_image_name
+
     def launch_server(self, name, flavor, group, is_training=False, cgroups=False, cgroups_args=None,
-                      docker_ready=False, gpu_ready=False):
+                      docker_ready=False, gpu_ready=False, secure_ready=False):
         """
         Launch a server with a given name + flavor.
 
@@ -196,6 +209,8 @@ class StateManagement:
         """
         if self.dry_run:
             return {'Status': 'OK (fake)'}
+
+        current_image_name = self._select_image(gpu_ready, secure_ready)
 
         logging.info("launching %s (%s)", name, flavor)
         # If it's a compute-something, then we just tag as compute, per current
@@ -209,7 +224,7 @@ class StateManagement:
 
         args = [
             'server', 'create',
-            '--image', self.current_image_name,
+            '--image', current_image_name,
             '--flavor', flavor,
             '--key-name', self.config['sshkey'],
             '--availability-zone', 'nova',
@@ -234,7 +249,7 @@ class StateManagement:
         return self.wait_for_state(name, 'ACTIVE', escape_states=['ERROR'])
 
     def launch_server_volume(self, name, flavor, group, is_training=False, cgroups=False, cgroups_args=None,
-                             docker_ready=False, gpu_ready=False,
+                             docker_ready=False, gpu_ready=False, secure_ready=False,
                              vol_size=12, vol_type='default', vol_boot=False):
         """
         Launch a server with a given name + flavor.
@@ -244,6 +259,8 @@ class StateManagement:
         """
         if self.dry_run:
             return {'Status': 'OK (fake)'}
+
+        current_image_name = self._select_image(gpu_ready, secure_ready)
 
         logging.info("launching %s (%s) with volume", name, flavor)
         # If it's a compute-something, then we just tag as compute, per current
@@ -256,26 +273,34 @@ class StateManagement:
         f.close()
 
         args = [
-            'boot',
+            'server', 'create',
             '--flavor', flavor,
             '--key-name', self.config['sshkey'],
             '--availability-zone', 'nova',
             '--nic', 'net-id=%s' % self.config['network_id'],
-            '--user-data', f.name,
-            '--security-groups', ','.join(self.config['secgroups']),
+            '--user-data', f.name
         ]
+        for sg in self.config['secgroups']:
+            args.append('--security-group')
+            args.append(sg)
+
+        args.append('--image')
+        args.append(current_image_name)
+
         if vol_boot:
-            args.append('--block-device')
-            args.append('source=image,id={},dest=volume,size={},volume_type={},bootindex=0,shutdown=remove'.format(self.config['image_id'], vol_size, vol_type))
+            args.append('--boot-from-volume')
+            args.append('{}'.format(vol_size))
         else:
-            args.append('--image')
-            args.append(self.current_image_name)
             args.append('--block-device')
-            args.append('source=blank,dest=volume,size={},volume_type={},shutdown=remove'.format(vol_size, vol_type))
+            args.append('source_type=blank,destination_type=volume,volume_size={},volume_type={},delete_on_termination=true'.format(vol_size, vol_type))
+
+        args.append('--os-compute-api-version')
+        args.append('2.67')
 
         args.append(name)
 
-        self.os_command(args, cmd='nova', is_json=False)
+
+        self.os_command(args, cmd='openstack', is_json=False)
 
         try:
             os.unlink(f.name)
@@ -361,7 +386,7 @@ class StateManagement:
             time.sleep(10)
 
     def top_up(self, desired_instances, prefix, flavor, group, volume=False, volume_args=None,
-               cgroups=False, cgroups_args=None, docker_ready=False, gpu_ready=False):
+               cgroups=False, cgroups_args=None, docker_ready=False, gpu_ready=False, secure_ready=False):
         """
         :param int desired_instances: Number of instances of this type to launch
 
@@ -395,6 +420,7 @@ class StateManagement:
                 'cgroups_args': cgroups_args,
                 'docker_ready': docker_ready,
                 'gpu_ready': gpu_ready,
+                'secure_ready': secure_ready
             }
 
             if volume:
@@ -410,8 +436,13 @@ class StateManagement:
                     fault = self.os_command(['server', 'show', server['ID']]).get('fault', {'message': '<error>'})
                 else:
                     fault = {'message': "Unknown"}
+
                 logging.error('Failed to launch %s: %s', server['Name'], fault['message'])
                 self.brutally_terminate(server)
+
+                if 'There are not enough hosts available' in fault['message']:
+                    logging.warning('Skipping launch attempt for remaining machines due to too-few-hosts error.')
+                    break
             else:
                 logging.info('Launched. %s (state=%s)', server, server['Status'])
 
@@ -465,8 +496,15 @@ class StateManagement:
 
                 # Galaxy-net must be the used network, maybe this check is extraneous
                 # but better to only work on things we know are safe to work on.
-                netz = [x.split('=')[0] for x in server['Networks'].split(',')]
-                if self.config['network'] not in netz:
+
+                # This changed formats, i guess due to versions of python-openstackclient?
+                if isinstance(server['Networks'], dict):
+                    netz = server['Networks']
+                else:
+                    # 99% sure this'll work (:
+                    netz = { x.split('=')[0]: x.split('=')[1] for x in server['Networks'].split(',') }
+
+                if self.config['network'] not in netz.keys():
                     if server['Status'] == 'ERROR':
                         self.brutally_terminate(server)
                         continue
@@ -494,7 +532,8 @@ class StateManagement:
                             cgroups=True if 'cgroups' in resource else False,
                             cgroups_args=resource.get('cgroups', None),
                             docker_ready=resource.get('docker_ready', False),
-                            gpu_ready=resource.get('gpu_ready', False))
+                            gpu_ready=resource.get('gpu_ready', False),
+                            secure_ready=resource.get('secure_ready', False))
 
             # Now that we've removed all that we need to remove, again, try to top-up
             # to make sure we're OK. (Also important in case we had no servers already
@@ -506,7 +545,8 @@ class StateManagement:
                         cgroups=True if 'cgroups' in resource else False,
                         cgroups_args=resource.get('cgroups', None),
                         docker_ready=resource.get('docker_ready', False),
-                        gpu_ready=resource.get('gpu_ready', False))
+                        gpu_ready=resource.get('gpu_ready', False),
+                        secure_ready=resource.get('secure_ready', False))
 
 
 def make_parser():

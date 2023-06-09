@@ -1,23 +1,24 @@
 ---
 # The latest image we want deployed. If images are running that have an
 # appropriate prefix but are not running this image, they will be removed.
-image: vggp-v60-j326-d1dfcf46c4cd-main.raw
-image_id: a87c6b69-4f62-4fdd-8401-c4aabaf17946
+# THIS CONFIGURATION RUN AT CINECA.
+image: vggp-v60-j225-1a1df01ec8f3-dev 
+image_id: a2291cc6-4947-4d3c-870e-16e0afccaa75
 
-network: private_net
-network_id: d92781a6-bbb5-4238-8fd7-c38d2cc8b68f
+network: elixir-network
+network_id: 89a56dba-50a8-4f0c-8522-8d671d20edc5
 image_replace: false
 
 secgroups:
- - condor-cluster-egress-public
- - condor-cluster-ingress-private
+ - condor-public
+   # - condor-private
 
 graceful: false
-sshkey: condor-cluster-cloud_keycopy
+sshkey: cloud
 
 # The public key(s) we will accept when SSHing to a machine.
 pubkeys:
-    - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDH1TyGvTGFzEBK2lSrcCvKVTQiA7jLQJYIPlsWZcyQzfgDhcJEBt93wJpj9cn8rnJHFFwnoRWfMSZqUn0VD+tByIWdi32fgjD/+6zUbyZojFAiiIQN80/8toktw7duynpDJPNgRt6a7PnsFX24s1jhkN8WZShRf6SpubRAUyxgj6Zuz7KQtieY2x2YRdAAXsKpnOGbMi2mE5G+PLVx/t3FzcHheDqNPz6R5j0Ikq/uiobd+E1hwCCW+P8+qa+OPnrhvuNf24mOApwGvEkKDELHJotTLAdCmfbhpuBqTx3BICPikdzOwpJ4tCierU+SxD1wy7ffCEonrEwNN7gBiT9d"
+    - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCv0/H8VaGgmIaOZ04HYKZKssZARXf2QPB6JGmlbiFpwA7MxakuBkPzm9t+UsGd6vWZ+LDQY+MdZNGt2Nm0e/0TJO9Ilxc/nANPYqR5rzOBFUkXlKw57zxmXVr6Aamrl5ePS13zUNeM34PKG78CA92quG0YNjYeCZon4UiyAfXHzdcvTcwn2lbRsaxMTDxlO8r7ZKf9rDuyjf4Q98hVqDjN57+3ZIoU4o9PBJg+8TpiCe5igMtM53WmbhUk1EuiZoB6Hnc+OpaoPhFAjcxANVw4CMII5YzxN9YCdk9jAPXE4WEb1vnSm9HWoOuZiJoOgb2ngeTX5maioUP7ugVJyE7N9iaFMCz4P7cjfEKHu01EgP8H7Ts65DqcX4Xu8pUYbCPBHzvUFcHDngV/mG2Fabk4MOrdoGC2DXKKE+LRVjEDlaXMVN7kc3qKP9/4euna6gBoIp530MgRitIGmlPHyMKAeRfIXz2e7FONCUSzRHp4deo127fzl79hVOFUacnEbg8= pokhmel@master"
 
 deployment:
     worker-medium:
@@ -26,5 +27,5 @@ deployment:
         group: compute
     worker-test:
         count: 1 #40
-        flavor: large
+        flavor: fl.ada.xs
         group: compute
