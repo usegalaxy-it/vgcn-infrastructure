@@ -7,6 +7,18 @@ mapping:
     "image_id":
       type: str
       required: true
+    "image_gpu":
+        type: str
+        required: true
+    "image_gpu_id":
+        type: str
+        required: true
+    "image_secure":
+        type: str
+        required: true
+    "image_secure_id":
+        type: str
+        required: true
     "image_replace":
         type: bool
         required: true

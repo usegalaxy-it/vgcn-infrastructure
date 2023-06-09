@@ -5,12 +5,19 @@
 image: vggp-v60-j225-1a1df01ec8f3-dev 
 image_id: a2291cc6-4947-4d3c-870e-16e0afccaa75
 
+# currently NO GPU, but neeed to maintain the same framework 
+image_gpu: vggp-v60-gpu-j322-692e75a7c101-main
+image_gpu_id: f5b82cb0-03b4-44f0-8ce5-33f15c53f89b
+
+image_secure: vggp-v60-secure-j322-692e75a7c101-main
+image_secure_id: 02b59caf-374d-4cef-aafc-d86fe0aeb9ce
+
 network: elixir-network
 network_id: 89a56dba-50a8-4f0c-8522-8d671d20edc5
 image_replace: false
 
 secgroups:
- - condor-public
+ - public-condor
    # - condor-private
 
 graceful: false
