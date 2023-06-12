@@ -18,6 +18,7 @@ image_replace: false
 
 secgroups:
  - public-condor
+ - public-ssh # Allow SSH 
    # - condor-private
 
 graceful: false
