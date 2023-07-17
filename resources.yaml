@@ -34,6 +34,6 @@ deployment:
         flavor: medium
         group: compute
     worker-test:
-        count: 1 #40
+        count: 2 #40
         flavor: fl.ada.xs
         group: compute
