@@ -31,7 +31,7 @@ pubkeys:
 deployment:
     worker-medium:
         count: 0
-        flavor: mieidium
+        flavor: medium
         group: compute
     worker-ada-xs:
         count: 1
