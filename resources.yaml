@@ -31,14 +31,14 @@ pubkeys:
 deployment:
     worker-medium:
         count: 0
-        flavor: medium
+        flavor: mieidium
         group: compute
     worker-ada-xs:
-        count: 0
+        count: 1
         flavor: fl.ada.xs
         group: compute
     worker-ada-l:
-        count: 1
+        count:00
         flavor: fl.ada.l
         group: compute
     worker-ada-xl:
