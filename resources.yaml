@@ -34,7 +34,7 @@ deployment:
         flavor: medium
         group: compute
     worker-ada-xs:
-        count: 1
+        count: 0
         flavor: fl.ada.xs
         group: compute
     worker-ada-l:
@@ -46,7 +46,7 @@ deployment:
         flavor: fl.ada.xl
         group: compute
     worker-ada-xxl:
-        count: 0
+        count: 2
         flavor: fl.ada.xxl
         group: compute
     worker-ada-full:
