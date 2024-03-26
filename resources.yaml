@@ -33,8 +33,8 @@ deployment:
         count: 0
         flavor: medium
         group: compute
-    worker-ada-xs:
-        count: 2
+    worker-xs:
+        count: 0
         flavor: fl.ada.xs
         group: compute
     worker-ada-l:
