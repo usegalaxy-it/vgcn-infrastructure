@@ -38,7 +38,7 @@ deployment:
         flavor: fl.ada.xs
         group: compute
     worker-ada-l:
-        count:00
+        count: 0
         flavor: fl.ada.l
         group: compute
     worker-ada-xl:
