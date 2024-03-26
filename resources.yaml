@@ -41,3 +41,7 @@ deployment:
         count: 1
         flavor: fl.ada.l
         group: compute
+    worker-ada-xl:
+        count: 1
+        flavor: fl.ada.xl
+        group: compute
