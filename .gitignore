@@ -17,7 +17,7 @@
 .ssh_key
 .venv
 bin/
-operncA.sh
+openrcA.sh
 userdata-dev.yaml
 userdataold.yaml
 ensure_enough_old.py

@@ -13,11 +13,10 @@ import tempfile
 import time
 import yaml
 
-# Importazioni aggiuntive per la decriptazione con Ansible Vault
+# Additional imports for decryption with Ansible Vault 
 from ansible.parsing.vault import VaultLib, VaultSecret
 from ansible.parsing.dataloader import DataLoader
 from ansible.constants import DEFAULT_VAULT_ID_MATCH
-
 
 logging.basicConfig(level=logging.INFO)
 
@@ -28,22 +27,23 @@ class VgcnPolicy(paramiko.client.MissingHostKeyPolicy):
         if key.get_base64() not in vgcn_pubkeys:
             raise Exception("Untrusted Host")
 
+
 class StateManagement:
 
     def __init__(self, args=None):
         self.resources_file = args.resources_file
         self.userdata_file = args.userdata_file
         self.dry_run = args.dry_run
-        self.vault_password = args.vault_password  # Aggiunto per gestire la password del vault
+        self.vault_password = args.vault_password  # Added to handle the vault password
 
         logging.info('Resources file: {}'.format(self.resources_file))
         logging.info('Userdata file: {}'.format(self.userdata_file))
         logging.info('Dry run mode: {}'.format(self.dry_run))
 
-        # Decripta il file userdata.yaml
+        # Decrypt the userdata.yaml file 
         self.user_data = self.decrypt_vault_file(self.userdata_file, self.vault_password)
 
-        # Carica il file resources.yaml (presumo non sia criptato)
+        # Load the resources.yaml file (assuming it's not encrypted) 
         with open(self.resources_file, 'r') as handle:
             self.config = yaml.safe_load(handle)
 
@@ -55,19 +55,18 @@ class StateManagement:
 
     def decrypt_vault_file(self, filename, password):
         loader = DataLoader()
-        # Imposta il segreto del vault
+        # Set the vault secret 
         vault_secret = VaultSecret(password.encode('utf-8'))
         vault = VaultLib([(DEFAULT_VAULT_ID_MATCH, vault_secret)])
 
-        # Leggi il contenuto criptato
+        # Read the encrypted content 
         with open(filename, 'rb') as f:
             encrypted_data = f.read()
 
-        # Decripta il contenuto
+        # Decrypt the content 
         decrypted_data = vault.decrypt(encrypted_data)
 
         return decrypted_data.decode('utf-8')
-
 
     @staticmethod
     def os_command(args, is_json=True, cmd=None):
@@ -174,7 +173,6 @@ class StateManagement:
 
         return current_image_name
 
-
     def launch_server(self, name, flavor, group, is_training=False, cgroups=False, cgroups_args=None,
                       docker_ready=False, gpu_ready=False, secure_ready=False):
         if self.dry_run:
@@ -187,7 +185,7 @@ class StateManagement:
                                                cgroups_args=cgroups_args,
                                                docker_ready=docker_ready, gpu_ready=gpu_ready)
 
-        # Scrivi il custom_userdata in un file temporaneo
+        # Write the custom_userdata to a temporary file 
         userdata_file_path = '/tmp/userdata.yaml'
         with open(userdata_file_path, 'w') as f:
             f.write(custom_userdata)
@@ -210,72 +208,67 @@ class StateManagement:
 
         self.os_command(args)
 
-        # Non eliminare immediatamente il file userdata
-        # os.unlink(userdata_file_path)
-
         return self.wait_for_state(name, 'ACTIVE', escape_states=['ERROR'])
 
     def launch_server_volume(self, name, flavor, group, is_training=False, cgroups=False, cgroups_args=None,
-                                docker_ready=False, gpu_ready=False, secure_ready=False,
-                                vol_size=12, vol_type='default', vol_boot=False):
-            """
-            Launch a server with a given name + flavor.
+                             docker_ready=False, gpu_ready=False, secure_ready=False,
+                             vol_size=12, vol_type='default', vol_boot=False):
+        """
+        Launch a server with a given name and flavor.
 
-            :returns: The launched server
-            :rtype: novaclient.v2.servers.Server
-            """
-            if self.dry_run:
-                return {'Status': 'OK (fake)'}
+        :returns: The launched server
+        :rtype: novaclient.v2.servers.Server
+        """
+        if self.dry_run:
+            return {'Status': 'OK (fake)'}
 
-            current_image_name = self._select_image(gpu_ready, secure_ready)
+        current_image_name = self._select_image(gpu_ready, secure_ready)
 
-            logging.info("launching %s (%s) with volume", name, flavor)
-            # If it's a compute-something, then we just tag as compute, per current
-            # sorting hat expectations.
-            custom_userdata = self.template_config(group, is_training=is_training, cgroups=cgroups, cgroups_args=cgroups_args,
-                                                docker_ready=docker_ready, gpu_ready=gpu_ready)
+        logging.info("Launching %s (%s) with volume", name, flavor)
+        custom_userdata = self.template_config(group, is_training=is_training, cgroups=cgroups,
+                                               cgroups_args=cgroups_args,
+                                               docker_ready=docker_ready, gpu_ready=gpu_ready)
 
-            f = tempfile.NamedTemporaryFile(prefix='ensure-enough.', delete=False)
-            f.write(custom_userdata.encode())
-            f.close()
+        f = tempfile.NamedTemporaryFile(prefix='ensure-enough.', delete=False)
+        f.write(custom_userdata.encode())
+        f.close()
 
-            args = [
-                'server', 'create',
-                '--flavor', flavor,
-                '--key-name', self.config['sshkey'],
-                '--availability-zone', 'nova',
-                '--nic', 'net-id=%s' % self.config['network_id'],
-                '--user-data', f.name
-            ]
-            for sg in self.config['secgroups']:
-                args.append('--security-group')
-                args.append(sg)
+        args = [
+            'server', 'create',
+            '--flavor', flavor,
+            '--key-name', self.config['sshkey'],
+            '--availability-zone', 'nova',
+            '--nic', 'net-id=%s' % self.config['network_id'],
+            '--user-data', f.name
+        ]
+        for sg in self.config['secgroups']:
+            args.append('--security-group')
+            args.append(sg)
 
-            args.append('--image')
-            args.append(current_image_name)
+        args.append('--image')
+        args.append(current_image_name)
 
-            if vol_boot:
-                args.append('--boot-from-volume')
-                args.append('{}'.format(vol_size))
-            else:
-                args.append('--block-device')
-                args.append('source_type=blank,destination_type=volume,volume_size={},volume_type={},delete_on_termination=true'.format(vol_size, vol_type))
+        if vol_boot:
+            args.append('--boot-from-volume')
+            args.append('{}'.format(vol_size))
+        else:
+            args.append('--block-device')
+            args.append('source_type=blank,destination_type=volume,volume_size={},volume_type={},delete_on_termination=true'.format(vol_size, vol_type))
 
-            args.append('--os-compute-api-version')
-            args.append('2.67')
+        args.append('--os-compute-api-version')
+        args.append('2.67')
 
-            args.append(name)
+        args.append(name)
 
+        self.os_command(args, cmd='openstack', is_json=False)
 
-            self.os_command(args, cmd='openstack', is_json=False)
+        try:
+            os.unlink(f.name)
+        except:
+            pass
 
-            try:
-                os.unlink(f.name)
-            except:
-                pass
-
-            # Wait for this server to become 'ACTIVE'
-            return self.wait_for_state(name, 'ACTIVE', escape_states=['ERROR'])
+        # Wait for this server to become 'ACTIVE'
+        return self.wait_for_state(name, 'ACTIVE', escape_states=['ERROR'])
 
     def brutally_terminate(self, server):
         if self.dry_run:
@@ -292,7 +285,7 @@ class StateManagement:
 
         if server['Status'] == 'ACTIVE':
             # Get the IP address
-            # TODO(hxr): will not support multiply homed
+            # TODO: Will not support multiple network interfaces
             ip = server['Networks'].split('=')[1]
 
             time_slept = 0
@@ -301,11 +294,11 @@ class StateManagement:
                 time_slept += 10
                 if time_slept > patience:
                     logging.info("%s is busy, giving up for this hour.", server['Name'])
-                    # exit early
+                    # Exit early
                     return
 
                 # Drain self
-                logging.info("executing condor_drain on %s", server['Name'])
+                logging.info("Executing condor_drain on %s", server['Name'])
                 stdout, stderr = self.remote_command(ip, 'condor_drain `hostname -f`')
                 logging.info('condor_drain %s %s', stdout, stderr)
 
@@ -316,10 +309,10 @@ class StateManagement:
                     # This one is still draining.
                     pass
                 elif "Can't find address" in stderr:
-                    # already shut off
+                    # Already shut off
                     pass
                 else:
-                    logging.warn("Something might be wrong: %s, %s", stdout, stderr)
+                    logging.warning("Something might be wrong: %s, %s", stdout, stderr)
                     break
 
                 try:
@@ -330,7 +323,7 @@ class StateManagement:
                     break
 
                 logging.info('condor_status %s', condor_statuses)
-                # if 'Retiring' then we're still draining. If 'Idle' then safe to exit.
+                # If 'Retiring' then we're still draining. If 'Idle' then safe to exit.
                 if len(condor_statuses) > 1:
                     # The machine is currently busy but will not accept any new jobs. For now, leave it alone.
                     logging.info("%s is busy, sleeping.", server['Name'])
@@ -361,7 +354,7 @@ class StateManagement:
 
         :param str resource_identifier: Just the `{resource_id}` from previous part
 
-        :param str flavor: flavor to launch
+        :param str flavor: Flavor to launch
 
         :param str group: The group that it is launched in (compute, upload, training-{resource_id})
         """
@@ -458,26 +451,26 @@ class StateManagement:
 
             # We will start expiring old ones, "topping up" as we go along.
             for server in servers_rm:
-                # we need to SSH in and condor_drain, wait for queue to empty, and then
+                # We need to SSH in and condor_drain, wait for queue to empty, and then
                 # kill.
 
                 # Galaxy-net must be the used network, maybe this check is extraneous
                 # but better to only work on things we know are safe to work on.
 
-                # This changed formats, i guess due to versions of python-openstackclient?
+                # This changed formats, I guess due to versions of python-openstackclient?
                 if isinstance(server['Networks'], dict):
                     netz = server['Networks']
                 else:
-                    # 99% sure this'll work (:
-                    netz = { x.split('=')[0]: x.split('=')[1] for x in server['Networks'].split(',') }
+                    # 99% sure this'll work :)
+                    netz = {x.split('=')[0]: x.split('=')[1] for x in server['Networks'].split(',')}
 
                 if self.config['network'] not in netz.keys():
                     if server['Status'] == 'ERROR':
                         self.brutally_terminate(server)
                         continue
 
-                    logging.warn(server['Networks'])
-                    logging.warn("Not sure how to handle server %s", server['Name'])
+                    logging.warning(server['Networks'])
+                    logging.warning("Not sure how to handle server %s", server['Name'])
                     continue
 
                 # Gracefully (or violently, depending on patience) terminate the VM.
@@ -529,11 +522,12 @@ def make_parser():
                         help='Ansible Vault password')
     return parser
 
+
 if __name__ == '__main__':
     parser = make_parser()
     args = parser.parse_args()
 
-    # Puoi anche ottenere la password dal sistema operativo se preferisci
+    # You can also get the password from the environment if you prefer 
     if not args.vault_password:
         args.vault_password = os.getenv('VAULT_PASSWORD')
 
