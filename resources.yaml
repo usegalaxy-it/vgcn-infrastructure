@@ -3,53 +3,36 @@
 # appropriate prefix but are not running this image, they will be removed.
 # THIS CONFIGURATION RUN AT CINECA.
 image: vggp-v60-j225-1a1df01ec8f3-dev 
-image_id: a2291cc6-4947-4d3c-870e-16e0afccaa75
+image_id: 2610cf63-7ab3-4055-9ead-e49c9203e327
 
 # currently NO GPU, but neeed to maintain the same framework 
-image_gpu: vggp-v60-gpu-j322-692e75a7c101-main
-image_gpu_id: f5b82cb0-03b4-44f0-8ce5-33f15c53f89b
+image_gpu: vggp-gpu-v60-j16-4b8cbb05c6db-dev
+image_gpu_id: 91062281-5549-430e-bbff-5d3874e1f9dc
 
 image_secure: vggp-v60-secure-j322-692e75a7c101-main
 image_secure_id: 02b59caf-374d-4cef-aafc-d86fe0aeb9ce
 
-network: elixir-network
-network_id: 89a56dba-50a8-4f0c-8522-8d671d20edc5
+network: private_net
+network_id: 214be9a0-ba80-42e5-89a8-c8fde3878e5d
 image_replace: false
 
 secgroups:
- - public-condor
- - public-ssh # Allow SSH 
+ - it05-public-ssh
+ - it05-ingress-private
+ - it05-egress-public
+   # - public-ssh # Allow SSH 
    # - condor-private
 
 graceful: false
-sshkey: cloud
+sshkey: it05-key
 
 # The public key(s) we will accept when SSHing to a machine.
 pubkeys:
-    - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCv0/H8VaGgmIaOZ04HYKZKssZARXf2QPB6JGmlbiFpwA7MxakuBkPzm9t+UsGd6vWZ+LDQY+MdZNGt2Nm0e/0TJO9Ilxc/nANPYqR5rzOBFUkXlKw57zxmXVr6Aamrl5ePS13zUNeM34PKG78CA92quG0YNjYeCZon4UiyAfXHzdcvTcwn2lbRsaxMTDxlO8r7ZKf9rDuyjf4Q98hVqDjN57+3ZIoU4o9PBJg+8TpiCe5igMtM53WmbhUk1EuiZoB6Hnc+OpaoPhFAjcxANVw4CMII5YzxN9YCdk9jAPXE4WEb1vnSm9HWoOuZiJoOgb2ngeTX5maioUP7ugVJyE7N9iaFMCz4P7cjfEKHu01EgP8H7Ts65DqcX4Xu8pUYbCPBHzvUFcHDngV/mG2Fabk4MOrdoGC2DXKKE+LRVjEDlaXMVN7kc3qKP9/4euna6gBoIp530MgRitIGmlPHyMKAeRfIXz2e7FONCUSzRHp4deo127fzl79hVOFUacnEbg8= pokhmel@master"
+  #    - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCv0/H8VaGgmIaOZ04HYKZKssZARXf2QPB6JGmlbiFpwA7MxakuBkPzm9t+UsGd6vWZ+LDQY+MdZNGt2Nm0e/0TJO9Ilxc/nANPYqR5rzOBFUkXlKw57zxmXVr6Aamrl5ePS13zUNeM34PKG78CA92quG0YNjYeCZon4UiyAfXHzdcvTcwn2lbRsaxMTDxlO8r7ZKf9rDuyjf4Q98hVqDjN57+3ZIoU4o9PBJg+8TpiCe5igMtM53WmbhUk1EuiZoB6Hnc+OpaoPhFAjcxANVw4CMII5YzxN9YCdk9jAPXE4WEb1vnSm9HWoOuZiJoOgb2ngeTX5maioUP7ugVJyE7N9iaFMCz4P7cjfEKHu01EgP8H7Ts65DqcX4Xu8pUYbCPBHzvUFcHDngV/mG2Fabk4MOrdoGC2DXKKE+LRVjEDlaXMVN7kc3qKP9/4euna6gBoIp530MgRitIGmlPHyMKAeRfIXz2e7FONCUSzRHp4deo127fzl79hVOFUacnEbg8= pokhmel@master"
+  - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDL+VxTpdyjkTplCLqzKEF3Bt1G2Y1nLtIDkRMMoZld71rD+YsnVVH9J4huc8DUsKbmsGfe6VdqKJ6LDtYeSzfMZfbowQ/pBFetUHEQJpVosJXjuOLoQbj7bvxzzIxKs52VLNq7Ips3T+Jsr2hZo7AjL7VJYiB4zXadv8ARgytkxki0yTnYVm+2iPn4oVBKNGgH370BRs7pkDz4Yq68dhd8TqRY96qateTYK7p6DHJX64jADaTHSnY850Wq3mJyPATgy7sBN2Bg0CYKeG6+5Nyz6uHRE7VlsoriXTSf34mhLQkDyS1d+eRxsynZUUlfQDF7Jjnd/daOEVoDu0I1wIiKAxVJOK0ltFB1eLh0mjsp0dTtNnrgJ+nS/qa3Z62u9ozQH/kQo3Xv5+f+u7iRCFz2NXXHD+oSZY4fCLQjcOty/+Uv9Cfj4JEtn+JSX9EslmzPLnS73L+L5hLxsrfNHB0/0nkSN3DNb05gYfKMGu5K0puv68csAtlacxSguKxbC08= luigi@MacBook-Pro-di-Luigi.local"
 
 deployment:
-    worker-medium:
-        count: 0
-        flavor: medium
-        group: compute
-    worker-ada-xs:
-        count: 0
-        flavor: fl.ada.xs
-        group: compute
-    worker-ada-l:
-        count: 0
-        flavor: fl.ada.l
-        group: compute
-    worker-ada-xl:
-        count: 0
-        flavor: fl.ada.xl
-        group: compute
-    worker-ada-xxl:
-        count: 1
-        flavor: fl.ada.xxl
-        group: compute
-    worker-ada-full:
-        count: 0
-        flavor: fl.ada.full
+    exec-node:
+        count: 2
+        flavor: 8cpu-32GB-20dsk
         group: compute
