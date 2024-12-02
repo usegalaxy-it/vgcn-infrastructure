@@ -13,6 +13,10 @@ import tempfile
 import time
 import yaml
 
+# Additional imports for decryption with Ansible Vault 
+from ansible.parsing.vault import VaultLib, VaultSecret
+from ansible.parsing.dataloader import DataLoader
+from ansible.constants import DEFAULT_VAULT_ID_MATCH
 
 logging.basicConfig(level=logging.INFO)
 
@@ -30,22 +34,39 @@ class StateManagement:
         self.resources_file = args.resources_file
         self.userdata_file = args.userdata_file
         self.dry_run = args.dry_run
+        self.vault_password = args.vault_password  # Added to handle the vault password
 
-        logging.info('resources file: {}'.format(self.resources_file))
-        logging.info('userdata file: {}'.format(self.userdata_file))
+        logging.info('Resources file: {}'.format(self.resources_file))
+        logging.info('Userdata file: {}'.format(self.userdata_file))
         logging.info('Dry run mode: {}'.format(self.dry_run))
 
+        # Decrypt the userdata.yaml file 
+        self.user_data = self.decrypt_vault_file(self.userdata_file, self.vault_password)
+
+        # Load the resources.yaml file (assuming it's not encrypted) 
         with open(self.resources_file, 'r') as handle:
             self.config = yaml.safe_load(handle)
-
-        with open(self.userdata_file, 'r') as handle:
-            self.user_data = handle.read()
 
         self.current_image_name = self.config['image']
         self.current_image_gpu_name = self.config['image_gpu']
         self.current_image_secure_name = self.config['image_secure']
         self.vgcn_pubkeys = self.config['pubkeys']
         self.today = datetime.date.today()
+
+    def decrypt_vault_file(self, filename, password):
+        loader = DataLoader()
+        # Set the vault secret 
+        vault_secret = VaultSecret(password.encode('utf-8'))
+        vault = VaultLib([(DEFAULT_VAULT_ID_MATCH, vault_secret)])
+
+        # Read the encrypted content 
+        with open(filename, 'rb') as f:
+            encrypted_data = f.read()
+
+        # Decrypt the content 
+        decrypted_data = vault.decrypt(encrypted_data)
+
+        return decrypted_data.decode('utf-8')
 
     @staticmethod
     def os_command(args, is_json=True, cmd=None):
@@ -54,7 +75,6 @@ class StateManagement:
             lcmd += ['-f', 'json']
         logging.debug(' '.join(lcmd))
         q = subprocess.check_output(lcmd)
-        # logging.debug(q)
         if is_json:
             return json.loads(q)
         else:
@@ -67,95 +87,49 @@ class StateManagement:
         logging.debug("Connecting to %s@%s:%s", username, hostname, port)
         client.connect(hostname, port=port, username=username)
 
-        logging.debug("executing: %s", command)
+        logging.debug("Executing: %s", command)
         stdin, stdout, stderr = client.exec_command(command)
-        # Returned as 'bytes' in py3k
         stdout_decoded = stdout.read().decode('utf-8')
         stderr_decoded = stderr.read().decode('utf-8')
         return stdout_decoded, stderr_decoded
 
     @staticmethod
     def non_conflicting_name(prefix, existing_servers):
-        """
-        Generate a name for the machine that's unique to the machine and not used
-        by any existing ones.
-
-        :param str prefix: the name prefix, usually vgcnbwc-{resource_identifier}
-        :param list(Nova) existing_servers: list of existing servers against which
-                                            we will check the names.
-        """
         server_names = [x['Name'] for x in existing_servers]
-        # Make at least ten tries
         for i in range(10):
-            # generate a test name, similar style to jenkins images.
             test_name = '%s-%04d' % (prefix, random.randint(0, 9999))
-            # If unused, we can use this.
             if test_name not in server_names:
                 return test_name
-
-        # Generate a failsafe name to ensure deterministic exiting.
         return '%s-%f' % (prefix, time.time())
 
     def identify_server_group(self, server_identifier):
-        """
-        Identify a list of servers starting with some specific prefix, and mark
-        those of the current image as OK while those with a different image are
-        marked TO REMOVE
-
-        :param str server_identifier: A string that prefixes all servers of that group, e.g. `vgcnbwc-training...`
-
-        :returns: a set of servers to REMOVE and a set of TO KEEP
-        :rtype: tuple(list, list)
-        """
         servers_rm = []
         servers_ok = []
-        # All servers
         for server in sorted(self.os_command(['server', 'list']), key=lambda x: x['Name']):
-            # Filter by those with our server_identifier.
             if server['Name'].startswith(server_identifier):
                 server_image_name = server['Image']
-                # if the image isn't the latest / current version, OR if the server
-                # isn't running
                 if (self.config['image_replace'] and server_image_name != self.current_image_name) or \
                         server['Status'] != 'ACTIVE':
-                    # Then kill it.
                     pass
-                    # servers_rm.append(server)
                 else:
-                    # Otherwise leave it alone.
                     servers_ok.append(server)
         return servers_rm, servers_ok
 
     def wait_for_state(self, server_name, target_state, escape_states=None, timeout=600):
-        """
-        Wait for a server to reach a specific state.
-
-        :param str server_name: Name of the server
-        :param str target_state: one of https://docs.openstack.org/nova/latest/reference/vm-states.html
-        :param list or None escape_states: A list of status that also trigger an exit without hitting the timeout.
-        :param int timeout: The maximum number of seconds to wait before exiting.
-
-        :returns: The launched server
-        :rtype: novaclient.v2.servers.Server
-        """
         if escape_states is None:
             escape_states = []
 
         slept_for = 0
 
-        # TODO: guard against getting stuck.c
         while True:
-            # Get the latest listing of servers
             current_servers = {x['Name']: x for x in self.os_command(['server', 'list'])}
-            logging.debug("current_servers: %s", current_servers)
-            # If the server is visible + active, let's exit.
+            logging.debug("Current servers: %s", current_servers)
             if server_name in current_servers:
                 if current_servers[server_name]['Status'] == target_state:
                     return current_servers[server_name]
                 elif current_servers[server_name]['Status'] in escape_states:
                     return current_servers[server_name]
 
-            # Sleep
             time.sleep(10)
             slept_for += 10
 
@@ -201,26 +175,20 @@ class StateManagement:
 
     def launch_server(self, name, flavor, group, is_training=False, cgroups=False, cgroups_args=None,
                       docker_ready=False, gpu_ready=False, secure_ready=False):
-        """
-        Launch a server with a given name + flavor.
-
-        :returns: The launched server
-        :rtype: novaclient.v2.servers.Server
-        """
         if self.dry_run:
             return {'Status': 'OK (fake)'}
 
         current_image_name = self._select_image(gpu_ready, secure_ready)
 
-        logging.info("launching %s (%s)", name, flavor)
-        # If it's a compute-something, then we just tag as compute, per current
-        # sorting hat expectations.
-        custom_userdata = self.template_config(group, is_training=is_training, cgroups=cgroups, cgroups_args=cgroups_args,
+        logging.info("Launching %s (%s)", name, flavor)
+        custom_userdata = self.template_config(group, is_training=is_training, cgroups=cgroups,
+                                               cgroups_args=cgroups_args,
                                                docker_ready=docker_ready, gpu_ready=gpu_ready)
 
-        f = tempfile.NamedTemporaryFile(prefix='ensure-enough.', delete=False)
-        f.write(custom_userdata.encode())
-        f.close()
+        # Write the custom_userdata to a temporary file 
+        userdata_file_path = '/tmp/userdata.yaml'
+        with open(userdata_file_path, 'w') as f:
+            f.write(custom_userdata)
 
         args = [
             'server', 'create',
@@ -229,7 +197,7 @@ class StateManagement:
             '--key-name', self.config['sshkey'],
             '--availability-zone', 'nova',
             '--nic', 'net-id=%s' % self.config['network'],
-            '--user-data', f.name,
+            '--user-data', userdata_file_path,
         ]
 
         for sg in self.config['secgroups']:
@@ -240,19 +208,13 @@ class StateManagement:
 
         self.os_command(args)
 
-        try:
-            os.unlink(f.name)
-        except:
-            pass
-
-        # Wait for this server to become 'ACTIVE'
         return self.wait_for_state(name, 'ACTIVE', escape_states=['ERROR'])
 
     def launch_server_volume(self, name, flavor, group, is_training=False, cgroups=False, cgroups_args=None,
                              docker_ready=False, gpu_ready=False, secure_ready=False,
                              vol_size=12, vol_type='default', vol_boot=False):
         """
-        Launch a server with a given name + flavor.
+        Launch a server with a given name and flavor.
 
         :returns: The launched server
         :rtype: novaclient.v2.servers.Server
@@ -262,10 +224,9 @@ class StateManagement:
 
         current_image_name = self._select_image(gpu_ready, secure_ready)
 
-        logging.info("launching %s (%s) with volume", name, flavor)
-        # If it's a compute-something, then we just tag as compute, per current
-        # sorting hat expectations.
-        custom_userdata = self.template_config(group, is_training=is_training, cgroups=cgroups, cgroups_args=cgroups_args,
+        logging.info("Launching %s (%s) with volume", name, flavor)
+        custom_userdata = self.template_config(group, is_training=is_training, cgroups=cgroups,
+                                               cgroups_args=cgroups_args,
                                                docker_ready=docker_ready, gpu_ready=gpu_ready)
 
         f = tempfile.NamedTemporaryFile(prefix='ensure-enough.', delete=False)
@@ -299,7 +260,6 @@ class StateManagement:
 
         args.append(name)
 
-
         self.os_command(args, cmd='openstack', is_json=False)
 
         try:
@@ -325,7 +285,7 @@ class StateManagement:
 
         if server['Status'] == 'ACTIVE':
             # Get the IP address
-            # TODO(hxr): will not support multiply homed
+            # TODO: Will not support multiple network interfaces
             ip = server['Networks'].split('=')[1]
 
             time_slept = 0
@@ -334,11 +294,11 @@ class StateManagement:
                 time_slept += 10
                 if time_slept > patience:
                     logging.info("%s is busy, giving up for this hour.", server['Name'])
-                    # exit early
+                    # Exit early
                     return
 
                 # Drain self
-                logging.info("executing condor_drain on %s", server['Name'])
+                logging.info("Executing condor_drain on %s", server['Name'])
                 stdout, stderr = self.remote_command(ip, 'condor_drain `hostname -f`')
                 logging.info('condor_drain %s %s', stdout, stderr)
 
@@ -349,10 +309,10 @@ class StateManagement:
                     # This one is still draining.
                     pass
                 elif "Can't find address" in stderr:
-                    # already shut off
+                    # Already shut off
                     pass
                 else:
-                    logging.warn("Something might be wrong: %s, %s", stdout, stderr)
+                    logging.warning("Something might be wrong: %s, %s", stdout, stderr)
                     break
 
                 try:
@@ -363,7 +323,7 @@ class StateManagement:
                     break
 
                 logging.info('condor_status %s', condor_statuses)
-                # if 'Retiring' then we're still draining. If 'Idle' then safe to exit.
+                # If 'Retiring' then we're still draining. If 'Idle' then safe to exit.
                 if len(condor_statuses) > 1:
                     # The machine is currently busy but will not accept any new jobs. For now, leave it alone.
                     logging.info("%s is busy, sleeping.", server['Name'])
@@ -394,7 +354,7 @@ class StateManagement:
 
         :param str resource_identifier: Just the `{resource_id}` from previous part
 
-        :param str flavor: flavor to launch
+        :param str flavor: Flavor to launch
 
         :param str group: The group that it is launched in (compute, upload, training-{resource_id})
         """
@@ -491,26 +451,26 @@ class StateManagement:
 
             # We will start expiring old ones, "topping up" as we go along.
             for server in servers_rm:
-                # we need to SSH in and condor_drain, wait for queue to empty, and then
+                # We need to SSH in and condor_drain, wait for queue to empty, and then
                 # kill.
 
                 # Galaxy-net must be the used network, maybe this check is extraneous
                 # but better to only work on things we know are safe to work on.
 
-                # This changed formats, i guess due to versions of python-openstackclient?
+                # This changed formats, I guess due to versions of python-openstackclient?
                 if isinstance(server['Networks'], dict):
                     netz = server['Networks']
                 else:
-                    # 99% sure this'll work (:
-                    netz = { x.split('=')[0]: x.split('=')[1] for x in server['Networks'].split(',') }
+                    # 99% sure this'll work :)
+                    netz = {x.split('=')[0]: x.split('=')[1] for x in server['Networks'].split(',')}
 
                 if self.config['network'] not in netz.keys():
                     if server['Status'] == 'ERROR':
                         self.brutally_terminate(server)
                         continue
 
-                    logging.warn(server['Networks'])
-                    logging.warn("Not sure how to handle server %s", server['Name'])
+                    logging.warning(server['Networks'])
+                    logging.warning("Not sure how to handle server %s", server['Name'])
                     continue
 
                 # Gracefully (or violently, depending on patience) terminate the VM.
@@ -558,7 +518,8 @@ def make_parser():
                         help='Userdata file', default='userdata.yaml')
     parser.add_argument('-d', '--dry_run', action='store_true',
                         help='dry run mode')
-
+    parser.add_argument('--vault-password', type=str, metavar='VAULT_PASSWORD',
+                        help='Ansible Vault password')
     return parser
 
 
@@ -566,5 +527,10 @@ if __name__ == '__main__':
     parser = make_parser()
     args = parser.parse_args()
 
+    # You can also get the password from the environment if you prefer 
+    if not args.vault_password:
+        args.vault_password = os.getenv('VAULT_PASSWORD')
+
     s = StateManagement(args=args)
     s.syncronize_infrastructure()
+

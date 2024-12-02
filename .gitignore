@@ -1,1 +1,25 @@
-.vault_password
+
+# Created by https://www.gitignore.io/api/terraform
+
+### Terraform ###
+# Compiled files
+*.tfstate
+*.tfstate.*
+
+# Module directory
+.terraform/
+
+# .tfvars files
+*.tfvars
+
+
+# End of https://www.gitignore.io/api/terraform
+.ssh_key
+.venv
+bin/
+openrcA.sh
+userdata-dev.yaml
+userdataold.yaml
+ensure_enough_old.py
+ansible.cfg
+.vault-password.txt

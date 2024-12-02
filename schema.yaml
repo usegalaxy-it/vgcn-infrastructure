@@ -64,6 +64,7 @@ mapping:
                           - small
                           - medium
                           - large
+                          - 8cpu-32GB-20dsk
                           # Cineca
                           - fl.ada.xs
                           - fl.ada.s
