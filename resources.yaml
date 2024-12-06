@@ -24,7 +24,7 @@ secgroups:
    # - condor-private
 
 graceful: false
-sshkey: usegalaxy_it
+sshkey: usegalaxy_it_robot
 
 # The public key(s) we will accept when SSHing to a machine.
 pubkeys:
