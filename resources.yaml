@@ -33,6 +33,6 @@ AAAAB3NzaC1yc2EAAAADAQABAAACAQDJHEZdEoTi081resAZrSa7P2lGf4PWQbXIkVz8ITNUFal1alX/
 
 deployment:
     exec-node:
-        count: 0
+        count: 2
         flavor: 8cpu-32GB-20dsk
         group: compute
