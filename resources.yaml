@@ -24,7 +24,7 @@ secgroups:
    # - condor-private
 
 graceful: false
-sshkey: usegalaxy_it
+sshkey: usegalaxy_it_robot
 
 # The public key(s) we will accept when SSHing to a machine.
 pubkeys:
@@ -33,6 +33,6 @@ AAAAB3NzaC1yc2EAAAADAQABAAACAQDJHEZdEoTi081resAZrSa7P2lGf4PWQbXIkVz8ITNUFal1alX/
 
 deployment:
     exec-node:
-        count: 2
+        count: 0
         flavor: 8cpu-32GB-20dsk
         group: compute
