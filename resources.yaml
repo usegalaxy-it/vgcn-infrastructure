@@ -1,38 +1,52 @@
 ---
-# The latest image we want deployed. If images are running that have an
-# appropriate prefix but are not running this image, they will be removed.
-# THIS CONFIGURATION RUN AT CINECA.
-image: vggp-v60-j225-1a1df01ec8f3-dev 
-image_id: 2610cf63-7ab3-4055-9ead-e49c9203e327
-
-# currently NO GPU, but neeed to maintain the same framework 
-image_gpu: vggp-gpu-v60-j16-4b8cbb05c6db-dev
-image_gpu_id: 91062281-5549-430e-bbff-5d3874e1f9dc
-
-image_secure: vggp-v60-secure-j322-692e75a7c101-main
-image_secure_id: 02b59caf-374d-4cef-aafc-d86fe0aeb9ce
+# Global configuration of computing nodes.
+images:
+  default: vggp-v60-j225-1a1df01ec8f3-dev 
+  gpu:  vggp-gpu-v60-j16-4b8cbb05c6db-dev
+  secure: vggp-v60-secure-j322-692e75a7c101-main
+id:
+  default: 2610cf63-7ab3-4055-9ead-e49c9203e327
+  gpu: 91062281-5549-430e-bbff-5d3874e1f9dc
+  secure: 02b59caf-374d-4cef-aafc-d86fe0aeb9ce
 
 network: private_net
 network_id: 214be9a0-ba80-42e5-89a8-c8fde3878e5d
-image_replace: false
 
 secgroups:
  - it05-public-ssh
  - it05-ingress-private
  - it05-egress-public
-   # - public-ssh # Allow SSH 
-   # - condor-private
 
-graceful: false
 sshkey: usegalaxy_it_robot
-
-# The public key(s) we will accept when SSHing to a machine.
 pubkeys:
   - "ssh-rsa 
 AAAAB3NzaC1yc2EAAAADAQABAAACAQDJHEZdEoTi081resAZrSa7P2lGf4PWQbXIkVz8ITNUFal1alX/SiHCXBoqmuNdiXd+URFKfFe/Oz87h9N+VHTsTHU8VEomemHtXBLwTzUUVyz1Ez8TzNAGVGQxxlzCmIkh+vxrAMhb7rpZnNXPnPSGMmODUwKQc1GrKAVkQTVjQSB7Hu2FTbb4H8/HjZnE7XLIPRpxlG1ytABNJwDYpDrhKqwFzedFQXlBPPqKsbS4E8oh/8m/hUtSoninA3RI8bPjidS1DDeU3nEvyi6yUD+QzF3yNQtvKVxCTzh0vNvpwTEJEFWjjATRPhVJcdGe72TlFcGl44mlNTbY+zAp6F+JzyTBcqzJjArwJmYOhDie+7ZPcpNsJyoY96g2f4qa5TRCLOoGegllzK+A9FSKhcUUPfTN1jWDhoO60tHNOB1H89rRaYEYYisZTRzXuZmo0MDaK3MiEhMbaBnF+4MAYNQwIr7LsdzOLZWECnMJqjOYMxu8gmeEYcBOqOInMYRwCVfNIpRfzZ4gWITnCwdNk4F8zOxdmvrgtQa61z8LqjxG5e29nbcDER3+Qe+JyiaQ2fqQGck3VvnVTB96t7XK3stDUMnBg9s7oWtgExXVnUElww38M+4aEXvPaPKkfnct+juvcUP9jPwrMabVTE+nIPkXCMT/k90nP2bngsizkwFQmQ== usegalaxy_it"
+  
+# Behavior of `synchronize.py''
+graceful: false
+
+nodes_inventory:
+  c1.c28m225d50: 5 #(16.04.2024: RZ swapped the underlying servers for a 4 in 1 node and this will be of a different flavor and we need to wait to get the hardware)
+  c1.c28m475d50: 19
+  c1.c36m100d50: 30
+  c1.c36m225d50: 15
+  c1.c36m900d50: 1
+  c1.c36m975d50: 8
+  c1.c60m1975d50: 1
+  c1.c120m205d50: 10
+  c1.c120m405d50: 22
+  c1.c125m425d50: 16
+  c1.c28m935d50: 4
+  c1.c28m875d50: 2
+  g1.c14m40g1d50: 4
+  g1.c8m40g1d50: 14
+  8cpu-32GB-20dsk: 8
+  xxlarge: 16
+
 
 deployment:
-    exec-node:
-        count: 2
-        flavor: 8cpu-32GB-20dsk
-        group: compute
+  exec-node:
+    count: 4
+    flavor: xxlarge
+    group: compute
+    image: default
