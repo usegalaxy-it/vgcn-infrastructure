@@ -22,5 +22,5 @@ userdata-dev.yaml
 userdataold.yaml
 ensure_enough_old.py
 ansible.cfg
-.vault-password.txt
 .vault_password.txt
+clouds.yaml

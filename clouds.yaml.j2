@@ -1,0 +1,14 @@
+# clouds.yaml.j2
+clouds:
+  mycloud:
+    auth_type: {{ auth_type }}
+    identity_api_version: {{ identity_api_version }}
+    region_name: "{{ region_name }}"
+    interface: "{{ interface }}"
+    auth:
+      auth_url: "{{ auth_url }}"
+      project_id: "{{ project_id }}"
+      identity_provider: "{{ identity_provider }}"
+      protocol: "{{ protocol }}"
+      access_token: "{{ access_token }}"
+
