@@ -1,50 +1,45 @@
 ---
 type: map
 mapping:
-    "image":
-        type: str
+    # Global configuration of computing nodes.
+    "images":
+        type: map
         required: true
-    "image_id":
-      type: str
-      required: true
-    "image_gpu":
-        type: str
-        required: true
-    "image_gpu_id":
-        type: str
-        required: true
-    "image_secure":
-        type: str
-        required: true
-    "image_secure_id":
-        type: str
-        required: true
-    "image_replace":
-        type: bool
-        required: true
+        mapping:
+            "default":
+                type: str
+                required: true
+            "=":
+                type: str
     "network":
-        type: str
-        required: true
-    "network_id":
         type: str
         required: true
     "secgroups":
         type: seq
         required: true
         sequence:
-          - type: str
-    "graceful":
-        type: bool
-        required: true
+            - type: str
     "sshkey":
         type: str
         required: true
     "pubkeys":
         type: seq
         sequence:
-          - type: str
+            - type: str
+    "graceful":
+        type: bool
+        required: true
+    # Inventory.
+    "nodes_inventory":
+        type: map
+        matching-rule: all
+        mapping:
+            regex;([a-z][0-9].*):
+                type: int
+    # Resource group definitions.
     "deployment":
         type: map
+        required: true
         mapping:
             "=":
                 type: map
@@ -53,7 +48,7 @@ mapping:
                         type: int
                         required: true
                         range:
-                          min: 0
+                            min: 0
                     "flavor":
                         type: str
                         required: true
@@ -69,46 +64,53 @@ mapping:
                           - fl.ada.xs
                           - fl.ada.s
                           - fl.ada.m
-                          - fl.ada.l 
-                          - fl.ada.xl 
-                          - fl.ada.xxl 
-                          - fl.ada.full 
+                          - fl.ada.l
+                          - fl.ada.xl
+                          - fl.ada.xxl
+                          - fl.ada.full
                     "start":
                         type: date
+                        required: false
                         format: "%Y-%m-%d"
                     "end":
                         type: date
+                        required: false
                         format: "%Y-%m-%d"
                     "group":
                         type: str
+                        required: true
+                    "image":
+                        type: str
+                        required: false
                     "volume":
                         type: map
+                        required: false
                         'mapping':
                             "size":
                                 type: int
                                 range:
-                                  min: 12
+                                    min: 12
                             "type":
                                 type: str
                                 enum:
-                                  - default
-                                  - netapp
+                                    - default
+                                    - netapp
                             "boot":
                                 type: bool
                     "cgroups":
                         type: map
+                        required: false
                         'mapping':
                             "mem_limit_policy":
                                 type: str
                                 enum:
-                                  - soft
-                                  - hard
+                                    - soft
+                                    - hard
                             "mem_reserved_size":
                                 type: int
                                 required: true
                                 range:
                                     min: 1024
-                    "docker_ready":
+                    "docker":
                         type: bool
-                    "gpu_ready":
-                        type: bool
+                        required: false
