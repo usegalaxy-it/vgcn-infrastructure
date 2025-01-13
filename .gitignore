@@ -21,6 +21,5 @@ openrcA.sh
 userdata-dev.yaml
 userdataold.yaml
 ensure_enough_old.py
-ansible.cfg
 .vault_password.txt
 clouds.yaml
