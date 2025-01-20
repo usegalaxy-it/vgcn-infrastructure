@@ -46,7 +46,7 @@ nodes_inventory:
 
 deployment:
   exec-node:
-    count: 4
+    count: 2
     flavor: 8cpu-32GB-20dsk
     group: compute
     image: default
