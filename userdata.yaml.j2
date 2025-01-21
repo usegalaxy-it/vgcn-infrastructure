@@ -2,7 +2,7 @@
 write_files:
   - content: |
       # BEGIN MANAGED BLOCK
-      COLLECTOR_HOST = "{{ htcondor.host }}"
+      COLLECTOR_HOST = {{ htcondor.host }}
       CONDOR_HOST = usegalaxy-it    
       ALLOW_WRITE = *
       ALLOW_READ = $(ALLOW_WRITE)
@@ -27,7 +27,7 @@ write_files:
       STARTD.PROPORTIONAL_SWAP_ASSIGNMENT = True
       # END MANAGED BLOCK
       GalaxyTraining = True
-      GalaxyGroup = compute
+      GalaxyGroup = "compute"
       GalaxyCluster = none
       GalaxyDockerHack = False
       STARTD_ATTRS = GalaxyTraining, GalaxyGroup, GalaxyCluster, GalaxyDockerHack
