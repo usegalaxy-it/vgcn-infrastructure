@@ -17,7 +17,7 @@ secgroups:
  - it05-ingress-private
  - it05-egress-public
 
-sshkey: usegalaxy_it
+sshkey: usegalaxy_it_robot
 pubkeys:
   - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMZ6M41F4sf9ipRutlCNxGxpSNT9snjwIhaWbNiGKIr9 ma.tangaro@gmail.com" 
   
