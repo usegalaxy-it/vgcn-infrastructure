@@ -17,6 +17,9 @@ write_files:
       UID_DOMAIN = usegalaxy-it
       TRUST_UID_DOMAIN = True
       SOFT_UID_DOMAIN = True
+      BASE_CGROUP = htcondor
+      CGROUP_MEMORY_LIMIT_POLICY = hard
+      RESERVED_MEMORY = 2048
       # run with partitionable slots
       CLAIM_PARTITIONABLE_LEFTOVERS = True
       NUM_SLOTS = 1
@@ -25,30 +28,31 @@ write_files:
       SLOT_TYPE_1_PARTITIONABLE = True
       ALLOW_PSLOT_PREEMPTION = False
       STARTD.PROPORTIONAL_SWAP_ASSIGNMENT = True
-      # END MANAGED BLOCK
-      GalaxyTraining = True
-      GalaxyGroup = "compute"
+      # Galaxy tags
+      GalaxyTraining = {{ "training" in name }}
+      GalaxyGroup = "{{ group }}"
       GalaxyCluster = none
-      GalaxyDockerHack = False
+      GalaxyDockerHack = {{ docker }}
       STARTD_ATTRS = GalaxyTraining, GalaxyGroup, GalaxyCluster, GalaxyDockerHack
       Rank = StringListMember(MY.GalaxyGroup, TARGET.Group)
+      # END MANAGED BLOCK
     owner: root:root
     path: /etc/condor/condor_config.local
     permissions: '0644'
 
-  - content: |
-      [[outputs.influxdb]]
-        urls = ["https://influxdb.galaxyproject.eu:8086"]
-        database = "{{ influxdb.database }}"
-        username = "{{ influxdb.username }}"
-        password = "{{ influxdb.password }}"
-    owner: telegraf:telegraf
-    path: /etc/telegraf/telegraf.d/output.conf
-    permissions: "0640"
+  #- content: |
+  #    [[outputs.influxdb]]
+  #      urls = ["https://influxdb.galaxyproject.eu:8086"]
+  #      database = "{{ influxdb.database }}"
+  #      username = "{{ influxdb.username }}"
+  #      password = "{{ influxdb.password }}"
+  #  owner: telegraf:telegraf
+  #  path: /etc/telegraf/telegraf.d/output.conf
+  #  permissions: "0640"
 
   - content: |
-      /data           /etc/auto.data          nfsvers=3
-      /-              /etc/auto.usrlocal      nfsvers=3
+      /-              /etc/auto.data
+      #/-              /etc/auto.usrlocal
     owner: root:root
     path: /etc/auto.master.d/data.autofs
     permissions: "0644"
@@ -73,7 +77,8 @@ write_files:
         roles:
           - role: ansible-htcondor-grycap
             vars:
-              htcondor_version: "10.x"
+              htcondor_version: 24.x
+              htcondor_channel: "current"
               htcondor_type_of_node: "execute"
               htcondor_role_manager: false
               htcondor_role_submit: false
@@ -82,10 +87,12 @@ write_files:
               htcondor_host: "{{ htcondor.host }}"
               htcondor_password: "{{ htcondor.password }}"
         tasks:
-          - name: Disable pulsar
-            systemd:
-              name: pulsar
-              state: stopped
+          - debug:
+              msg: {{ htcondor.password }}
+          #- name: Disable pulsar
+          #  systemd:
+          #    name: pulsar
+          #    state: stopped
           - name: Ensure password directory exists
             file:
               path: /etc/condor/passwords.d
@@ -97,15 +104,18 @@ write_files:
             service:
               name: condor
               state: restarted
-    owner: centos:centos
-    path: /home/centos/condor.yml
+    owner: galaxy:galaxy
+    path: /home/galaxy/condor.yml
     permissions: "0644"
 
 runcmd:
-  - echo "test" > /home/centos/test.text
-  - chown centos:centos /home/centos/test.text
-  - mkdir -p /home/centos/roles
-  - chown -R centos:centos /home/centos/roles
-  - su - centos -c 'ansible-galaxy install -p /home/centos/roles "git+https://github.com/usegalaxy-eu/ansible-htcondor-grycap.git"' >> /var/log/ansible-galaxy.log 2>&1
-  - su - centos -c 'ansible-playbook -i "localhost," /home/centos/condor.yml' >> /var/log/ansible-playbook.log 2>&1
-
+  - echo "test" > /home/galaxy/test.text
+  - mkdir -p /home/galaxy/roles
+  - chown -R galaxy:galaxy /home/galaxy/roles
+  - yum install -y epel-release
+  - yum update -y
+  - yum install -y ansible
+  - cp /root/condor.yml /home/galaxy/condor.yml
+  - chown galaxy:galaxy /home/galaxy/condor.yml
+  - su - galaxy -c 'ansible-galaxy install -p /home/galaxy/roles "git+https://github.com/usegalaxy-eu/ansible-htcondor-grycap.git"' >> /var/log/ansible-galaxy.log 2>&1
+  - su - galaxy -c 'ansible-playbook -i "localhost," /home/galaxy/condor.yml' >> /var/log/ansible-playbook.log 2>&1
