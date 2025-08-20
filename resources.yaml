@@ -1,11 +1,11 @@
 ---
 # Global configuration of computing nodes.
 images:
-  default: vggp-v60-j225-1a1df01ec8f3-dev 
+  default: vgcn_usegalaxy_it_v0.0.1
   gpu:  vggp-gpu-v60-j16-4b8cbb05c6db-dev
   secure: vggp-v60-secure-j322-692e75a7c101-main
 id:
-  default: 2610cf63-7ab3-4055-9ead-e49c9203e327
+  default: e1ace281-bd42-4111-8205-2aa74a3e141e
   gpu: 91062281-5549-430e-bbff-5d3874e1f9dc
   secure: 02b59caf-374d-4cef-aafc-d86fe0aeb9ce
 
@@ -13,14 +13,13 @@ network: private_net
 network_id: 214be9a0-ba80-42e5-89a8-c8fde3878e5d
 
 secgroups:
- - it05-public-ssh
- - it05-ingress-private
- - it05-egress-public
+ - public-ssh
+ - ingress-private
+ - egress-public
 
-sshkey: usegalaxy_it_robot
+sshkey: usegalaxy_it
 pubkeys:
-  - "ssh-rsa 
-AAAAB3NzaC1yc2EAAAADAQABAAACAQDJHEZdEoTi081resAZrSa7P2lGf4PWQbXIkVz8ITNUFal1alX/SiHCXBoqmuNdiXd+URFKfFe/Oz87h9N+VHTsTHU8VEomemHtXBLwTzUUVyz1Ez8TzNAGVGQxxlzCmIkh+vxrAMhb7rpZnNXPnPSGMmODUwKQc1GrKAVkQTVjQSB7Hu2FTbb4H8/HjZnE7XLIPRpxlG1ytABNJwDYpDrhKqwFzedFQXlBPPqKsbS4E8oh/8m/hUtSoninA3RI8bPjidS1DDeU3nEvyi6yUD+QzF3yNQtvKVxCTzh0vNvpwTEJEFWjjATRPhVJcdGe72TlFcGl44mlNTbY+zAp6F+JzyTBcqzJjArwJmYOhDie+7ZPcpNsJyoY96g2f4qa5TRCLOoGegllzK+A9FSKhcUUPfTN1jWDhoO60tHNOB1H89rRaYEYYisZTRzXuZmo0MDaK3MiEhMbaBnF+4MAYNQwIr7LsdzOLZWECnMJqjOYMxu8gmeEYcBOqOInMYRwCVfNIpRfzZ4gWITnCwdNk4F8zOxdmvrgtQa61z8LqjxG5e29nbcDER3+Qe+JyiaQ2fqQGck3VvnVTB96t7XK3stDUMnBg9s7oWtgExXVnUElww38M+4aEXvPaPKkfnct+juvcUP9jPwrMabVTE+nIPkXCMT/k90nP2bngsizkwFQmQ== usegalaxy_it"
+  - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMZ6M41F4sf9ipRutlCNxGxpSNT9snjwIhaWbNiGKIr9 ma.tangaro@gmail.com" 
   
 # Behavior of `synchronize.py''
 graceful: false
