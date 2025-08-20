@@ -13,9 +13,9 @@ network: private_net
 network_id: 214be9a0-ba80-42e5-89a8-c8fde3878e5d
 
 secgroups:
- - public-ssh
- - ingress-private
- - egress-public
+ - it05-public-ssh
+ - it05-ingress-private
+ - it05-egress-public
 
 sshkey: usegalaxy_it
 pubkeys:
