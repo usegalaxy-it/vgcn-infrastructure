@@ -63,11 +63,11 @@ write_files:
     path: /etc/auto.data
     permissions: "0644"
 
-  - content: |
-      /opt/galaxy        -rw,hard,intr,nosuid,quota,nfs,nfsvers=4,minorversion=2  172.18.12.115:/opt/galaxy
-    owner: root:root
-    path: /etc/auto.usrlocal
-    permissions: "0644"
+  #- content: |
+  #    /opt/galaxy        -rw,hard,intr,nosuid,quota,nfs,nfsvers=4,minorversion=2  172.18.12.115:/opt/galaxy
+  #  owner: root:root
+  #  path: /etc/auto.usrlocal
+  #  permissions: "0644"
 
   - content: |
       - name: Install HTCondor executor node
