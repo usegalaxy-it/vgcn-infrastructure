@@ -45,12 +45,12 @@ nodes_inventory:
 
 deployment:
   exec-node:
-    count: 1
+    count: 0
     flavor: 8cpu-32GB-20dsk
     group: upload
     image: default
   exec-node2:
-    count: 3
+    count: 0
     flavor: 8cpu-32GB-20dsk
     group: compute
     image: default

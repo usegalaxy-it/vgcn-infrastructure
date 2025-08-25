@@ -2,8 +2,8 @@
 write_files:
   - content: |
       # BEGIN MANAGED BLOCK
-      COLLECTOR_HOST = {{ htcondor.host }}
       CONDOR_HOST = {{ htcondor.host }}
+      COLLECTOR_HOST = {{ htcondor.host }}
       ALLOW_WRITE = *
       ALLOW_READ = $(ALLOW_WRITE)
       ALLOW_ADMINISTRATOR = *
@@ -13,8 +13,8 @@ write_files:
       ALLOW_OWNER = $(ALLOW_ADMINISTRATOR)
       ALLOW_CLIENT = *
       DAEMON_LIST = MASTER, SCHEDD, STARTD
-      FILESYSTEM_DOMAIN = usegalaxy-it
-      UID_DOMAIN = usegalaxy-it
+      FILESYSTEM_DOMAIN = usegalaxy.it
+      UID_DOMAIN = usegalaxy.it
       TRUST_UID_DOMAIN = True
       SOFT_UID_DOMAIN = True
       BASE_CGROUP = htcondor
