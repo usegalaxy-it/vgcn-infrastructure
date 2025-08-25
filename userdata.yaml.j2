@@ -3,7 +3,7 @@ write_files:
   - content: |
       # BEGIN MANAGED BLOCK
       COLLECTOR_HOST = {{ htcondor.host }}
-      CONDOR_HOST = usegalaxy-it    
+      CONDOR_HOST = {{ htcondor.host }}
       ALLOW_WRITE = *
       ALLOW_READ = $(ALLOW_WRITE)
       ALLOW_ADMINISTRATOR = *
