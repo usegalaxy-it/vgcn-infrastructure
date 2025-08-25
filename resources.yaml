@@ -5,7 +5,7 @@ images:
   gpu:  vggp-gpu-v60-j16-4b8cbb05c6db-dev
   secure: vggp-v60-secure-j322-692e75a7c101-main
 id:
-  default: e1ace281-bd42-4111-8205-2aa74a3e141e
+  default: 53608293-f4ff-4c28-9ac7-49143717a44b
   gpu: 91062281-5549-430e-bbff-5d3874e1f9dc
   secure: 02b59caf-374d-4cef-aafc-d86fe0aeb9ce
 
