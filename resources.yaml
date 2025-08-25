@@ -45,6 +45,11 @@ nodes_inventory:
 
 deployment:
   exec-node:
+    count: 0
+    flavor: 8cpu-32GB-20dsk
+    group: compute
+    image: default
+  exec-node2:
     count: 1
     flavor: 8cpu-32GB-20dsk
     group: compute
